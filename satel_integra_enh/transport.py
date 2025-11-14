@@ -3,8 +3,8 @@
 import asyncio
 import logging
 
-from satel_integra.const import FRAME_END
-from satel_integra.encryption import EncryptedCommunicationHandler
+from satel_integra_enh.const import FRAME_END
+from satel_integra_enh.encryption import EncryptedCommunicationHandler
 
 _LOGGER = logging.getLogger(__name__)
 

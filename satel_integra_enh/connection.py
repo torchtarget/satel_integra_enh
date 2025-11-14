@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-from satel_integra.transport import (
+from satel_integra_enh.transport import (
     SatelBaseTransport,
     SatelEncryptedTransport,
     SatelPlainTransport,

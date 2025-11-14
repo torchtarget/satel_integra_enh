@@ -5,11 +5,11 @@ import logging
 from enum import Enum, unique
 from collections.abc import Callable
 
-from satel_integra.commands import SatelReadCommand, SatelWriteCommand
-from satel_integra.connection import SatelConnection
-from satel_integra.messages import SatelReadMessage, SatelWriteMessage
-from satel_integra.utils import encode_bitmask_le
-from satel_integra.queue import SatelMessageQueue
+from satel_integra_enh.commands import SatelReadCommand, SatelWriteCommand
+from satel_integra_enh.connection import SatelConnection
+from satel_integra_enh.messages import SatelReadMessage, SatelWriteMessage
+from satel_integra_enh.utils import encode_bitmask_le
+from satel_integra_enh.queue import SatelMessageQueue
 
 _LOGGER = logging.getLogger(__name__)
 

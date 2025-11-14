@@ -3,14 +3,14 @@
 import logging
 from typing import TypeVar
 
-from satel_integra.commands import SatelBaseCommand, SatelReadCommand, SatelWriteCommand
-from satel_integra.const import (
+from satel_integra_enh.commands import SatelBaseCommand, SatelReadCommand, SatelWriteCommand
+from satel_integra_enh.const import (
     FRAME_END,
     FRAME_SPECIAL_BYTES,
     FRAME_SPECIAL_BYTES_REPLACEMENT,
     FRAME_START,
 )
-from satel_integra.utils import checksum, decode_bitmask_le, encode_bitmask_le
+from satel_integra_enh.utils import checksum, decode_bitmask_le, encode_bitmask_le
 
 _LOGGER = logging.getLogger(__name__)
 

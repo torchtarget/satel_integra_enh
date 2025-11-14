@@ -6,9 +6,9 @@ from collections.abc import Callable
 import logging
 from collections.abc import Awaitable
 
-from satel_integra.commands import SatelReadCommand
-from satel_integra.const import MESSAGE_RESPONSE_TIMEOUT
-from satel_integra.messages import SatelReadMessage, SatelWriteMessage
+from satel_integra_enh.commands import SatelReadCommand
+from satel_integra_enh.const import MESSAGE_RESPONSE_TIMEOUT
+from satel_integra_enh.messages import SatelReadMessage, SatelWriteMessage
 
 _LOGGER = logging.getLogger(__name__)
 
