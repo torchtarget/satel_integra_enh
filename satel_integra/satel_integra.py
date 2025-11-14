@@ -315,6 +315,82 @@ class AsyncSatel:
         msg = SatelWriteMessage(mode_command, code=code, zones_or_outputs=[output_id])
         await self._send_data(msg)
 
+    async def get_zone_temperature(self, zone_number: int, timeout: float = 5.0) -> float | None:
+        """Read temperature from a temperature-enabled zone.
+
+        Args:
+            zone_number: Zone number (1-256)
+            timeout: Response timeout in seconds (default 5.0, as per protocol spec)
+
+        Returns:
+            Temperature in Celsius, or None if:
+            - Zone is not a temperature zone
+            - Request times out
+            - Temperature is undetermined (0xFFFF)
+
+        Note:
+            According to protocol, response can be delayed up to 5 seconds.
+            Zone 256 should be sent as 0.
+        """
+        _LOGGER.debug("Reading temperature for zone %s", zone_number)
+
+        # Zone 256 is sent as 0 per protocol spec
+        zone_byte = 0 if zone_number == 256 else zone_number
+
+        msg = SatelWriteMessage(
+            SatelWriteCommand.READ_ZONE_TEMPERATURE,
+            raw_data=bytearray([zone_byte])
+        )
+
+        try:
+            response = await asyncio.wait_for(
+                self._send_data_and_wait(msg),
+                timeout=timeout
+            )
+
+            if not response or response.cmd != SatelReadCommand.READ_ZONE_TEMPERATURE:
+                _LOGGER.warning(
+                    "No temperature response for zone %s - zone may not support temperature",
+                    zone_number
+                )
+                return None
+
+            # Response format: 1 byte zone number + 2 bytes temperature (high, low)
+            if len(response.msg_data) < 3:
+                _LOGGER.error("Invalid temperature response length: %s", len(response.msg_data))
+                return None
+
+            returned_zone = response.msg_data[0]
+            temp_high = response.msg_data[1]
+            temp_low = response.msg_data[2]
+            temp_raw = (temp_high << 8) | temp_low
+
+            # Check for undetermined temperature
+            if temp_raw == 0xFFFF:
+                _LOGGER.debug("Temperature undetermined for zone %s", zone_number)
+                return None
+
+            # Convert to Celsius: 0x0000 = -55.0°C, increment is 0.5°C
+            # Formula: temp_celsius = -55.0 + (temp_raw * 0.5)
+            temp_celsius = -55.0 + (temp_raw * 0.5)
+
+            _LOGGER.debug(
+                "Zone %s temperature: %.1f°C (raw: 0x%04X)",
+                zone_number, temp_celsius, temp_raw
+            )
+
+            return temp_celsius
+
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timeout reading temperature for zone %s - zone may not support temperature",
+                zone_number
+            )
+            return None
+        except Exception as e:
+            _LOGGER.exception("Error reading temperature for zone %s: %s", zone_number, e)
+            return None
+
     # endregion
 
     # region Data management

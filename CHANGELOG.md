@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.0] - 2025-11-14
+
+### Added
+-   **Zone temperature reading** - New `get_zone_temperature()` method to read temperature from temperature-capable zones
+    -   Returns temperature in Celsius (range: -55°C to +125°C, 0.5°C increments)
+    -   Proper timeout handling (5 second default per protocol spec)
+    -   Handles non-temperature zones gracefully (returns None)
+    -   Handles undetermined temperature values (0xFFFF)
+-   Added `READ_ZONE_TEMPERATURE` command constants (0x7D) to both read and write command enums
+-   Enhanced README with fork purpose, features comparison, and protocol coverage table
+
+### Changed
+-   Updated README to clarify this is an enhanced fork with additional monitoring capabilities
+-   Added comprehensive documentation for temperature monitoring feature
+
 ## [0.3.7](https://github.com/c-soft/satel_integra/compare/0.3.6...0.3.7) -2022-07-05
 
 -   Integrated fix for Python 3.10 compatibility

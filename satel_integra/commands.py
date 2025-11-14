@@ -32,6 +32,7 @@ class SatelReadCommand(SatelBaseCommand):
     PARTITIONS_FIRE_ALARM = 0x14
     OUTPUTS_STATE = 0x17
     PARTITIONS_ARMED_MODE1 = 0x2A
+    READ_ZONE_TEMPERATURE = 0x7D
     READ_DEVICE_NAME = 0xEE
     RESULT = 0xEF
 
@@ -40,6 +41,7 @@ class SatelReadCommand(SatelBaseCommand):
 class SatelWriteCommand(SatelBaseCommand):
     """Write commands supported by Satel Integra protocol."""
 
+    READ_ZONE_TEMPERATURE = 0x7D
     START_MONITORING = 0x7F
     PARTITIONS_ARM_MODE_0 = 0x80
     PARTITIONS_ARM_MODE_1 = 0x81
@@ -53,4 +55,4 @@ class SatelWriteCommand(SatelBaseCommand):
 
     @property
     def expects_same_cmd_response(self) -> bool:
-        return self in {SatelWriteCommand.READ_DEVICE_NAME}
+        return self in {SatelWriteCommand.READ_DEVICE_NAME, SatelWriteCommand.READ_ZONE_TEMPERATURE}
