@@ -3,10 +3,10 @@ requires = ["setuptools>=80", "setuptools-scm[simple]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "satel_integra"
-description = "Communication library and basic testing tool for Satel Integra alarm system. Communication via TCP/IP protocol published by SATEL."
+name = "satel_integra_enh"
+description = "Enhanced communication library for Satel Integra alarm system with extended protocol support including temperature monitoring."
 readme = "README.md"
-keywords = ["satel", "integra", "satel_integra", "alarm", "security"]
+keywords = ["satel", "integra", "satel_integra", "alarm", "security", "temperature"]
 authors = [
   { name = "Krzysztof Machelski", email = "krzysztof.machelski+pypi@gmail.com" },
   { name = "Tom Matheussen", email = "13683094+Tommatheussen@users.noreply.github.com" }
@@ -38,8 +38,8 @@ dev = [
 ]
 
 [project.urls]
-Repository="https://github.com/c-soft/satel_integra"
-Changelog="https://github.com/c-soft/satel_integra/blob/master/CHANGELOG.md"
+Repository="https://github.com/torchtarget/satel_integra_enh"
+Changelog="https://github.com/torchtarget/satel_integra_enh/blob/master/CHANGELOG.md"
 
 [tool.pytest.ini_options]
 timeout = 10
