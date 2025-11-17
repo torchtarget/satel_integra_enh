@@ -59,9 +59,14 @@ class AsyncSatel:
         self.partition_states: dict[AlarmState, list[int]] = {}
         self._partitions: list[int] = partitions
 
+        # Trouble states: dict mapping trouble command to list of active trouble bits
+        # For example: {SatelReadCommand.TROUBLES_PART_3: [1, 5, 12]} means zones 1, 5, 12 have low battery
+        self.trouble_states: dict[SatelReadCommand, list[int]] = {}
+
         self._alarm_status_callback: Callable[[], None] | None = None
         self._zone_changed_callback: Callable[[dict[int, int]], None] | None = None
         self._output_changed_callback: Callable[[dict[int, int]], None] | None = None
+        self._trouble_changed_callback: Callable[[SatelReadCommand, list[int]], None] | None = None
 
         self._message_handlers: dict[
             SatelReadCommand, Callable[[SatelReadMessage], None]
@@ -98,6 +103,24 @@ class AsyncSatel:
             SatelReadCommand.PARTITIONS_ARMED_MODE1: lambda msg: self._partitions_armed_state(
                 AlarmState.ARMED_MODE1, msg
             ),
+            SatelReadCommand.TROUBLES_PART_0: lambda msg: self._troubles_changed(
+                SatelReadCommand.TROUBLES_PART_0, msg
+            ),
+            SatelReadCommand.TROUBLES_PART_1: lambda msg: self._troubles_changed(
+                SatelReadCommand.TROUBLES_PART_1, msg
+            ),
+            SatelReadCommand.TROUBLES_PART_2: lambda msg: self._troubles_changed(
+                SatelReadCommand.TROUBLES_PART_2, msg
+            ),
+            SatelReadCommand.TROUBLES_PART_3: lambda msg: self._troubles_changed(
+                SatelReadCommand.TROUBLES_PART_3, msg
+            ),
+            SatelReadCommand.TROUBLES_PART_4: lambda msg: self._troubles_changed(
+                SatelReadCommand.TROUBLES_PART_4, msg
+            ),
+            SatelReadCommand.TROUBLES_PART_5: lambda msg: self._troubles_changed(
+                SatelReadCommand.TROUBLES_PART_5, msg
+            ),
             SatelReadCommand.RESULT: self._command_result,
         }
 
@@ -117,6 +140,12 @@ class AsyncSatel:
             SatelReadCommand.PARTITIONS_ALARM,
             SatelReadCommand.PARTITIONS_FIRE_ALARM,
             SatelReadCommand.OUTPUTS_STATE,
+            SatelReadCommand.TROUBLES_PART_0,
+            SatelReadCommand.TROUBLES_PART_1,
+            SatelReadCommand.TROUBLES_PART_2,
+            SatelReadCommand.TROUBLES_PART_3,
+            SatelReadCommand.TROUBLES_PART_4,
+            SatelReadCommand.TROUBLES_PART_5,
         ]
 
         monitored_commands_bitmask = encode_bitmask_le(
@@ -195,6 +224,23 @@ class AsyncSatel:
         if self._alarm_status_callback:
             self._alarm_status_callback()
 
+    def _troubles_changed(self, trouble_cmd: SatelReadCommand, msg: SatelReadMessage):
+        """Generic handler for all trouble commands.
+
+        Parses the trouble message and extracts active trouble bits.
+        Different trouble commands return different byte counts based on protocol spec.
+        """
+        # Most trouble messages return variable length data - parse all available bits
+        # Protocol returns different byte counts per command (see protocol docs page 7-9)
+        active_troubles = msg.get_active_bits(len(msg.msg_data))
+
+        _LOGGER.debug("Troubles update for %s: %s", trouble_cmd, active_troubles)
+
+        self.trouble_states[trouble_cmd] = active_troubles
+
+        if self._trouble_changed_callback:
+            self._trouble_changed_callback(trouble_cmd, active_troubles)
+
     # region Core logic
     async def start(self, enable_monitoring=True):
         """Start the client, including queue, reading loop and keepalive."""
@@ -256,6 +302,7 @@ class AsyncSatel:
         alarm_status_callback: Callable[[], None] | None = None,
         zone_changed_callback: Callable[[dict[int, int]], None] | None = None,
         output_changed_callback: Callable[[dict[int, int]], None] | None = None,
+        trouble_changed_callback: Callable[[SatelReadCommand, list[int]], None] | None = None,
     ):
         """Register callback handlers for events."""
         if alarm_status_callback:
@@ -264,6 +311,8 @@ class AsyncSatel:
             self._zone_changed_callback = zone_changed_callback
         if output_changed_callback:
             self._output_changed_callback = output_changed_callback
+        if trouble_changed_callback:
+            self._trouble_changed_callback = trouble_changed_callback
 
     # endregion
 
