@@ -143,7 +143,20 @@ class SatelMessageQueue:
             return
 
         if self._current_message.expected_result_command != result.cmd:
-            _LOGGER.warning("Received result but message expects different result")
+            # Only warn if this looks like it could be a response (not a monitoring message)
+            # Monitoring messages (zones violated, outputs, partitions, etc.) are expected
+            # and should be silently ignored by the queue
+            potential_responses = {
+                SatelReadCommand.RESULT,
+                SatelReadCommand.READ_DEVICE_NAME,
+                SatelReadCommand.READ_ZONE_TEMPERATURE,
+            }
+            if result.cmd in potential_responses:
+                _LOGGER.warning(
+                    "Received %s but expected %s",
+                    result.cmd,
+                    self._current_message.expected_result_command
+                )
             return
 
         self._current_message.processed_future.set_result(result)
