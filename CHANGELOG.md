@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.6.3] - 2026-01-19
+
+### Added
+-   **Connection Circuit Breaker** - Prevents overwhelming ETHM-1 with rapid reconnection attempts
+    -   Opens after 5 consecutive connection failures
+    -   Blocks connections for 5 minutes to protect the ETHM-1 module
+    -   HALF_OPEN state tests if connections work again
+-   **Exponential Backoff for Reconnections** - Gradually increases delay between retries
+    -   Initial delay: 5 seconds
+    -   Maximum delay: 5 minutes (300s)
+    -   Multiplier: 2x per failure
+-   **Request Rate Limiter** - Prevents request flooding
+    -   Maximum 10 requests per 10-second sliding window
+    -   Minimum 0.5 second interval between consecutive requests
+    -   Extra 2 second delay after failures
+-   **Request Circuit Breaker** - Stops all requests when ETHM-1 appears overwhelmed
+    -   Opens after 3 consecutive request timeouts/failures
+    -   60 second cooldown period
+-   **Health Status API** - New `get_health_status()` method on AsyncSatel
+    -   Returns connection state, circuit breaker states, and rate limiter stats
+-   **New Properties on AsyncSatel**:
+    -   `connection_circuit_breaker_state` - Returns CLOSED/OPEN/HALF_OPEN
+    -   `request_circuit_breaker_active` - Returns True if in cooldown
+-   Exported `CircuitBreakerState` enum from package
+
+### Changed
+-   Connection retry logic now uses exponential backoff instead of fixed delay
+-   All requests now go through rate limiter before being sent
+
+### Fixed
+-   **Critical bug**: Integration could permanently block ETHM-1 ethernet port during outage recovery
+    -   Root cause: Rapid reconnection attempts + temperature polling overwhelmed the module
+    -   Fix: Multiple layers of protection prevent request storms
+
 ## [0.4.0] - 2025-11-14
 
 ### Added

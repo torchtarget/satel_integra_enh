@@ -6,7 +6,7 @@ from enum import Enum, unique
 from collections.abc import Callable
 
 from satel_integra_enh.commands import SatelReadCommand, SatelWriteCommand
-from satel_integra_enh.connection import SatelConnection
+from satel_integra_enh.connection import SatelConnection, CircuitBreakerState
 from satel_integra_enh.messages import SatelReadMessage, SatelWriteMessage
 from satel_integra_enh.utils import encode_bitmask_le
 from satel_integra_enh.queue import SatelMessageQueue
@@ -441,6 +441,42 @@ class AsyncSatel:
     def closed(self) -> bool:
         """Return true if connection is closed."""
         return self._connection.closed
+
+    @property
+    def connection_circuit_breaker_state(self) -> CircuitBreakerState:
+        """Return the connection circuit breaker state.
+
+        States:
+        - CLOSED: Normal operation, connections allowed
+        - OPEN: Too many failures, connections blocked temporarily
+        - HALF_OPEN: Testing if connections work again
+        """
+        return self._connection.circuit_breaker_state
+
+    @property
+    def request_circuit_breaker_active(self) -> bool:
+        """Return True if request circuit breaker is in cooldown.
+
+        When active, requests are being delayed to protect the ETHM-1.
+        """
+        return self._queue.in_cooldown
+
+    def get_health_status(self) -> dict:
+        """Get comprehensive health status of the connection and queue.
+
+        Returns a dict with:
+        - connected: bool - TCP connection state
+        - connection_circuit_breaker: str - Connection CB state
+        - request_circuit_breaker_active: bool - Request CB state
+        - queue_stats: dict - Rate limiter statistics
+        """
+        return {
+            "connected": self.connected,
+            "closed": self.closed,
+            "connection_circuit_breaker": self._connection.circuit_breaker_state.name,
+            "request_circuit_breaker_active": self._queue.in_cooldown,
+            "queue_stats": self._queue.get_stats(),
+        }
 
     async def connect(self) -> bool:
         """Make a TCP connection to the alarm system."""

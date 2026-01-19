@@ -80,11 +80,43 @@ For complete examples, look into the [examples](examples/) folder.
 
 ### Enhanced Features (this fork)
 - ✅ **Zone temperature reading** - Read temperature from temperature-capable zones
+- ✅ **Connection protection** - Circuit breaker and exponential backoff prevent overwhelming ETHM-1
+- ✅ **Request rate limiting** - Prevents request flooding that can lock out the ethernet module
 - 🚧 **Zone tamper detection** - Planned
 - 🚧 **System trouble monitoring** - Planned
 - 🚧 **Zone bypass status** - Planned
 - 🚧 **Alarm memory** - Planned
 - 🚧 **Enhanced zone states** - Planned
+
+### ETHM-1 Protection Features
+
+The ETHM-1 module can become unresponsive or blocked if overwhelmed with requests. This library includes multiple protection layers:
+
+```python
+from satel_integra_enh import AsyncSatel, CircuitBreakerState
+
+satel = AsyncSatel(host="192.168.1.100", port=7094, ...)
+
+# Check health status
+status = satel.get_health_status()
+print(status)
+# {
+#   'connected': True,
+#   'connection_circuit_breaker': 'CLOSED',
+#   'request_circuit_breaker_active': False,
+#   'queue_stats': {'requests_in_window': 2, 'max_requests': 10, ...}
+# }
+
+# Check circuit breaker state
+if satel.connection_circuit_breaker_state == CircuitBreakerState.OPEN:
+    print("Too many connection failures - connections blocked temporarily")
+```
+
+**Protection mechanisms:**
+- **Connection Circuit Breaker**: Opens after 5 consecutive failures, blocks for 5 minutes
+- **Exponential Backoff**: Reconnection delays increase (5s → 10s → 20s → ... up to 5 min)
+- **Request Rate Limiter**: Max 10 requests per 10 seconds, min 0.5s between requests
+- **Request Circuit Breaker**: Stops requests for 60s after 3 consecutive timeouts
 
 ### Protocol Coverage
 
